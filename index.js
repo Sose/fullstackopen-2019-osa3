@@ -17,38 +17,6 @@ const morganFormat =
   ':method :url :status :res[content-length] - :response-time ms :requestParams';
 app.use(morgan(morganFormat));
 
-/*
-let persons = [
-  {
-    name: 'Arto Hellas',
-    number: '040-123456',
-    id: 1,
-  },
-  {
-    name: 'Martti Tienari',
-    number: '040-123456',
-    id: 2,
-  },
-  {
-    name: 'Arto Järvinen',
-    number: '040-123456',
-    id: 3,
-  },
-  {
-    name: 'Lea Kutvonen',
-    number: '040-123456',
-    id: 4,
-  },
-];
-*/
-
-/* 
-// ?????
-app.get('/', (req, res) => {
-  res.send('<h1>Hello world!</h1>');
-});
-*/
-
 app.get('/info', (req, res) => {
   //const numPersons = persons.length;
   Person.find({}).then(persons => {
@@ -78,14 +46,14 @@ app.get('/api/persons/:id', (req, res) => {
         res.status(404).end();
       }
     })
-    .catch(err => {
+    .catch(() => {
       res.status(400).send({ error: 'malformatted id' });
     });
 });
 
 app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
-    .then(res2 => {
+    .then(() => {
       res.status(204).end();
     })
     .catch(err => next(err));
@@ -105,9 +73,12 @@ app.post('/api/persons', (req, res, next) => {
     number: body.number,
   });
 
-  person.save().then(savedPerson => {
-    res.json(savedPerson.toJSON());
-  }).catch(err => next(err))
+  person
+    .save()
+    .then(savedPerson => {
+      res.json(savedPerson.toJSON());
+    })
+    .catch(err => next(err));
 });
 
 app.put('/api/persons/:id', (req, res, next) => {
@@ -125,15 +96,17 @@ app.put('/api/persons/:id', (req, res, next) => {
     number: body.number,
   };
 
-  Person.findByIdAndUpdate(id, updatedPerson).then(res2 => {
-    console.log('find&update', res2);
+  Person.findByIdAndUpdate(id, updatedPerson)
+    .then(res2 => {
+      console.log('find&update', res2);
 
-    const purkkaa = new Person(updatedPerson).toJSON()
-    res.json(purkkaa) // TODO: what here??
-  }).catch(err => {
-    console.log(err);
-    next(err)
-  })
+      const purkkaa = new Person(updatedPerson).toJSON();
+      res.json(purkkaa); // TODO: what here??
+    })
+    .catch(err => {
+      console.log(err);
+      next(err);
+    });
 });
 
 const unknownEndpoint = (request, response) => {
@@ -144,12 +117,12 @@ app.use(unknownEndpoint);
 const errorHandler = (error, request, response, next) => {
   console.error(error.message);
 
-  if (error.name === 'CastError' && error.kind == 'ObjectId') {
+  if (error.name === 'CastError' && error.kind === 'ObjectId') {
     return response.status(400).send({ error: 'malformatted id' });
   }
 
   if (error.name === 'ValidationError') {
-    return response.status(400).send({ error: error.message })
+    return response.status(400).send({ error: error.message });
   }
 
   next(error);
